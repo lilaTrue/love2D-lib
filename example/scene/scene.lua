@@ -168,7 +168,7 @@ end
 local settingsScene = SceneManager:createScene("settings")
 
 function settingsScene:load()
-    self.options = {"Volume: High", "Difficulty: Normal", "Back"}
+    self.options = {"Volume: High", "Difficulty: Normal", "Transition Test", "Back"}
     self.selectedOption = 1
 end
 
@@ -190,10 +190,71 @@ function settingsScene:keypressed(key)
         self.selectedOption = math.min(#self.options, self.selectedOption + 1)
     elseif key == "return" then
         if self.selectedOption == 3 then
+            SceneManager:pushScene("transitions")
+        elseif self.selectedOption == 4 then
             SceneManager:popScene()
         end
     elseif key == "escape" then
         SceneManager:popScene()
+    end
+end
+
+-- Transitions Test Scene
+local transitionsScene = SceneManager:createScene("transitions")
+
+function transitionsScene:load()
+    self.transitions = {
+        "fade",
+        "slide_left",
+        "slide_right",
+        "slide_up",
+        "slide_down",
+        "zoom_in",
+        "zoom_out",
+        "rotate_cw",
+        "rotate_ccw",
+        "wipe_horizontal",
+        "wipe_vertical",
+        "checkerboard"
+    }
+    self.selectedTransition = 1
+    self.testScene = "menu"  -- Scene to transition to for testing
+end
+
+function transitionsScene:draw()
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.printf("TRANSITION TEST", 0, 50, love.graphics.getWidth(), "center")
+    love.graphics.printf("Select transition type and press ENTER to test", 0, 80, love.graphics.getWidth(), "center")
+
+    -- Draw transition list
+    local startY = 120
+    for i, transition in ipairs(self.transitions) do
+        local color = (i == self.selectedTransition) and {1, 1, 0} or {1, 1, 1}
+        love.graphics.setColor(color)
+        love.graphics.printf(transition, 0, startY + i * 25, love.graphics.getWidth(), "center")
+    end
+
+    love.graphics.setColor(0.7, 0.7, 0.7)
+    love.graphics.printf("Use UP/DOWN to select, ENTER to test, ESC to go back", 0, love.graphics.getHeight() - 50, love.graphics.getWidth(), "center")
+end
+
+function transitionsScene:keypressed(key)
+    if key == "up" then
+        self.selectedTransition = math.max(1, self.selectedTransition - 1)
+    elseif key == "down" then
+        self.selectedTransition = math.min(#self.transitions, self.selectedTransition + 1)
+    elseif key == "return" then
+        -- Test the selected transition
+        local transitionType = self.transitions[self.selectedTransition]
+        SceneManager:startTransition(transitionType, 1.0)
+        SceneManager:setScene(self.testScene)
+    elseif key == "escape" then
+        SceneManager:popScene()
+    elseif key == "space" then
+        -- Quick test with current selection
+        local transitionType = self.transitions[self.selectedTransition]
+        SceneManager:startTransition(transitionType, 0.5)
+        SceneManager:setScene(self.testScene)
     end
 end
 
@@ -227,6 +288,7 @@ SceneManager:addScene("menu", menuScene)
 SceneManager:addScene("game", gameScene)
 SceneManager:addScene("pause", pauseScene)
 SceneManager:addScene("settings", settingsScene)
+SceneManager:addScene("transitions", transitionsScene)
 SceneManager:addScene("gameOver", gameOverScene)
 
 -- Export scenes for external access if needed
@@ -235,5 +297,6 @@ return {
     game = gameScene,
     pause = pauseScene,
     settings = settingsScene,
+    transitions = transitionsScene,
     gameOver = gameOverScene
 }

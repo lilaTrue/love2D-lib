@@ -144,20 +144,145 @@ function SceneManager:drawTransition()
     if not self.transition then return end
 
     local progress = self.transitionTime / self.transition.duration
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
 
     if self.transition.type == "fade" then
         love.graphics.setColor(0, 0, 0, progress)
-        love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+        love.graphics.rectangle("fill", 0, 0, width, height)
         love.graphics.setColor(1, 1, 1, 1)
     elseif self.transition.type == "slide_left" then
-        local width = love.graphics.getWidth()
         local offset = width * (1 - progress)
         love.graphics.translate(-offset, 0)
         if self.currentScene and self.currentScene.draw then
             self.currentScene:draw()
         end
         love.graphics.translate(offset, 0)
-    -- Add more transition types as needed
+    elseif self.transition.type == "slide_right" then
+        local offset = width * progress
+        love.graphics.translate(offset, 0)
+        if self.currentScene and self.currentScene.draw then
+            self.currentScene:draw()
+        end
+        love.graphics.translate(-offset, 0)
+    elseif self.transition.type == "slide_up" then
+        local offset = height * (1 - progress)
+        love.graphics.translate(0, -offset)
+        if self.currentScene and self.currentScene.draw then
+            self.currentScene:draw()
+        end
+        love.graphics.translate(0, offset)
+    elseif self.transition.type == "slide_down" then
+        local offset = height * progress
+        love.graphics.translate(0, offset)
+        if self.currentScene and self.currentScene.draw then
+            self.currentScene:draw()
+        end
+        love.graphics.translate(0, -offset)
+    elseif self.transition.type == "zoom_in" then
+        local scale = 1 + progress * 0.5
+        love.graphics.scale(scale, scale)
+        local offsetX = (width * scale - width) / 2
+        local offsetY = (height * scale - height) / 2
+        love.graphics.translate(-offsetX, -offsetY)
+        if self.currentScene and self.currentScene.draw then
+            self.currentScene:draw()
+        end
+        love.graphics.translate(offsetX, offsetY)
+        love.graphics.scale(1/scale, 1/scale)
+    elseif self.transition.type == "zoom_out" then
+        local scale = 1 / (1 + progress * 0.5)
+        love.graphics.scale(scale, scale)
+        local offsetX = (width * scale - width) / 2
+        local offsetY = (height * scale - height) / 2
+        love.graphics.translate(-offsetX, -offsetY)
+        if self.currentScene and self.currentScene.draw then
+            self.currentScene:draw()
+        end
+        love.graphics.translate(offsetX, offsetY)
+        love.graphics.scale(1/scale, 1/scale)
+    elseif self.transition.type == "rotate_cw" then
+        love.graphics.translate(width/2, height/2)
+        love.graphics.rotate(progress * math.pi * 2)
+        love.graphics.translate(-width/2, -height/2)
+        if self.currentScene and self.currentScene.draw then
+            self.currentScene:draw()
+        end
+        love.graphics.translate(width/2, height/2)
+        love.graphics.rotate(-progress * math.pi * 2)
+        love.graphics.translate(-width/2, -height/2)
+    elseif self.transition.type == "rotate_ccw" then
+        love.graphics.translate(width/2, height/2)
+        love.graphics.rotate(-progress * math.pi * 2)
+        love.graphics.translate(-width/2, -height/2)
+        if self.currentScene and self.currentScene.draw then
+            self.currentScene:draw()
+        end
+        love.graphics.translate(width/2, height/2)
+        love.graphics.rotate(progress * math.pi * 2)
+        love.graphics.translate(-width/2, -height/2)
+    elseif self.transition.type == "pixelate" then
+        -- Create a canvas to render the scene
+        if not self.transitionCanvas then
+            self.transitionCanvas = love.graphics.newCanvas(width, height)
+        end
+        love.graphics.setCanvas(self.transitionCanvas)
+        love.graphics.clear()
+        if self.currentScene and self.currentScene.draw then
+            self.currentScene:draw()
+        end
+        love.graphics.setCanvas()
+
+        -- Apply pixelation effect
+        local pixelSize = math.floor(progress * 20) + 1
+        love.graphics.setShader(self.pixelateShader or love.graphics.newShader([[
+            extern number pixelSize;
+            vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
+                vec2 pixel_coords = floor(texture_coords * love_ScreenSize.xy / pixelSize) * pixelSize / love_ScreenSize.xy;
+                return Texel(texture, pixel_coords) * color;
+            }
+        ]]))
+        self.pixelateShader = self.pixelateShader or love.graphics.newShader([[
+            extern number pixelSize;
+            vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords) {
+                vec2 pixel_coords = floor(texture_coords * love_ScreenSize.xy / pixelSize) * pixelSize / love_ScreenSize.xy;
+                return Texel(texture, pixel_coords) * color;
+            }
+        ]])
+        love.graphics.getShader():send("pixelSize", pixelSize)
+        love.graphics.draw(self.transitionCanvas, 0, 0)
+        love.graphics.setShader()
+    elseif self.transition.type == "wipe_horizontal" then
+        -- Draw current scene with a horizontal wipe effect
+        love.graphics.setScissor(0, 0, width * progress, height)
+        if self.currentScene and self.currentScene.draw then
+            self.currentScene:draw()
+        end
+        love.graphics.setScissor()
+    elseif self.transition.type == "wipe_vertical" then
+        -- Draw current scene with a vertical wipe effect
+        love.graphics.setScissor(0, 0, width, height * progress)
+        if self.currentScene and self.currentScene.draw then
+            self.currentScene:draw()
+        end
+        love.graphics.setScissor()
+    elseif self.transition.type == "checkerboard" then
+        -- Checkerboard transition effect
+        local squareSize = 20
+        local squaresX = math.ceil(width / squareSize)
+        local squaresY = math.ceil(height / squareSize)
+
+        for y = 0, squaresY - 1 do
+            for x = 0, squaresX - 1 do
+                local delay = ((x + y) % 2) * 0.1
+                local squareProgress = math.max(0, (progress - delay) / (1 - delay))
+                if squareProgress > 0 then
+                    love.graphics.setColor(0, 0, 0, squareProgress)
+                    love.graphics.rectangle("fill", x * squareSize, y * squareSize, squareSize, squareSize)
+                end
+            end
+        end
+        love.graphics.setColor(1, 1, 1, 1)
     end
 end
 
