@@ -50,12 +50,32 @@ An object-oriented programming system for Lua with Love2D integration.
 - Game systems (physics, AI, rendering)
 - Data structures with behavior
 
+### CollisionManager (`lib/CollisionManager.lua`)
+
+A comprehensive collision detection system with Unity-style collision state tracking.
+
+**Features:**
+- Rectangle and circle collider types
+- Efficient collision detection algorithms
+- Unity-style collision states (enter, stay, exit)
+- Point containment checking
+- Debug visualization
+- Support for mixed collider types
+
+**Use Cases:**
+- Player-enemy collision detection
+- Platformer collision systems
+- UI element interaction detection
+- Physics-based game mechanics
+- Real-time collision response
+
 ## Documentation
 
 Comprehensive documentation is available in the `docs/` directory:
 
 - [`docs/class.md`](docs/class.md) - Complete ClassManager documentation
 - [`docs/scene.md`](docs/scene.md) - Complete SceneManager documentation
+- [`docs/collision.md`](docs/collision.md) - Complete CollisionManager documentation
 
 Each documentation file includes:
 - Detailed API reference
@@ -74,8 +94,9 @@ Each documentation file includes:
    ```
 3. **Follow the documentation** for implementation details
 4. **Check the examples** in the `example/` folder:
-   - `example/scene/` - Complete scene management demo with multiple scenes
-   - `example/class/` - Advanced class system demo with inheritance and game objects
+    - `example/scene/` - Complete scene management demo with multiple scenes
+    - `example/class/` - Advanced class system demo with inheritance and game objects
+    - `example/collider/` - Interactive collision detection demo with Unity-style states
 
    Each example folder contains its own `lib/` copy and can be run independently with Love2D.
 
@@ -85,20 +106,25 @@ Each documentation file includes:
 love lib/
 ├── README.md            # Project documentation
 ├── lib/
-│   ├── SceneManager.lua # Scene management system
-│   └── classManager.lua # OOP class system
+│   ├── SceneManager.lua     # Scene management system
+│   ├── classManager.lua     # OOP class system
+│   └── CollisionManager.lua # Collision detection system
 ├── docs/
-│   ├── class.md         # ClassManager documentation
-│   └── scene.md         # SceneManager documentation
+│   ├── class.md             # ClassManager documentation
+│   ├── scene.md             # SceneManager documentation
+│   └── collision.md         # CollisionManager documentation
 └── example/
     ├── scene/
     │   ├── lib/         # Copy of libraries for standalone execution
     │   ├── main.lua     # Complete scene management demo
     │   └── scene.lua    # Scene definitions
-    └── class/
+    ├── class/
+    │   ├── lib/         # Copy of libraries for standalone execution
+    │   ├── main.lua     # Complete class system demo
+    │   └── player.lua   # Advanced class examples
+    └── collider/
         ├── lib/         # Copy of libraries for standalone execution
-        ├── main.lua     # Complete class system demo
-        └── player.lua   # Advanced class examples
+        └── main.lua     # Interactive collision detection demo
 ```
 
 ## Examples
@@ -146,6 +172,32 @@ end
 local player = Player:new(100, 100)
 ```
 
+### Basic Collision Detection
+
+```lua
+local CollisionManager = require("lib.CollisionManager")
+
+local playerRect = CollisionManager.RectCollider:new(100, 100, 32, 32)
+local enemyCircle = CollisionManager.CircleCollider:new(200, 150, 20)
+
+function love.update(dt)
+    -- Move player
+    if love.keyboard.isDown("d") then
+        playerRect.x = playerRect.x + 200 * dt
+    end
+
+    -- Check collision
+    if CollisionManager.checkCollision(playerRect, enemyCircle) then
+        print("Collision detected!")
+    end
+end
+
+function love.draw()
+    playerRect:draw({0, 1, 0})  -- Green rectangle
+    enemyCircle:draw({1, 0, 0}) -- Red circle
+end
+```
+
 ## Contributing
 
 This is a personal project, but suggestions and feedback are welcome. If you have ideas for new libraries or improvements to existing ones, please create an issue or submit a pull request.
@@ -173,6 +225,7 @@ This project is released under the MIT License. Feel free to use, modify, and di
 - **Examples**: Check the `example/` folder for complete working demos:
   - `example/scene/` - Scene management demo
   - `example/class/` - Class system demo
+  - `example/collider/` - Collision detection demo
 - **Love2D Wiki**: Official Love2D documentation for framework-specific questions
 
 ## Acknowledgments
