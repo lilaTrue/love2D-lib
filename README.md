@@ -146,29 +146,6 @@ end
 local player = Player:new(100, 100)
 ```
 
-## Roadmap
-
-### Planned Libraries
-
-- **InputManager**: Unified input handling system
-- **UIManager**: UI component system with layouts and theming
-- **EntityManager**: Entity-component system for complex games
-- **ResourceManager**: Asset loading and caching system
-- **AudioManager**: Advanced audio management with spatial audio
-- **PhysicsManager**: Physics utilities and collision detection
-- **AnimationManager**: Sprite animation and tweening system
-- **SaveManager**: Data persistence and serialization
-- **NetworkManager**: Multiplayer networking utilities
-
-### Future Enhancements
-
-- **Performance optimizations** for large-scale games
-- **Additional Love2D platform support** (mobile, consoles)
-- **Integration with popular Love2D libraries**
-- **Visual editor tools** for scene and UI design
-- **Unit testing framework** for library validation
-- **Benchmarking tools** for performance analysis
-
 ## Contributing
 
 This is a personal project, but suggestions and feedback are welcome. If you have ideas for new libraries or improvements to existing ones, please create an issue or submit a pull request.
