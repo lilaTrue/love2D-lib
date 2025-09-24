@@ -73,20 +73,32 @@ Each documentation file includes:
    local classManager = require("lib.classManager")
    ```
 3. **Follow the documentation** for implementation details
-4. **Check the examples** in `main.lua` and `player.lua` for practical usage
+4. **Check the examples** in the `example/` folder:
+   - `example/scene/` - Complete scene management demo with multiple scenes
+   - `example/class/` - Advanced class system demo with inheritance and game objects
+
+   Each example folder contains its own `lib/` copy and can be run independently with Love2D.
 
 ## Project Structure
 
 ```
 love lib/
-├── main.lua              # Example usage and Love2D entry point
-├── player.lua            # Player class example
+├── README.md            # Project documentation
 ├── lib/
-│   ├── SceneManager.lua  # Scene management system
-│   └── classManager.lua  # OOP class system
-└── docs/
-    ├── class.md          # ClassManager documentation
-    └── scene.md          # SceneManager documentation
+│   ├── SceneManager.lua # Scene management system
+│   └── classManager.lua # OOP class system
+├── docs/
+│   ├── class.md         # ClassManager documentation
+│   └── scene.md         # SceneManager documentation
+└── example/
+    ├── scene/
+    │   ├── lib/         # Copy of libraries for standalone execution
+    │   ├── main.lua     # Complete scene management demo
+    │   └── scene.lua    # Scene definitions
+    └── class/
+        ├── lib/         # Copy of libraries for standalone execution
+        ├── main.lua     # Complete class system demo
+        └── player.lua   # Advanced class examples
 ```
 
 ## Examples
@@ -181,7 +193,9 @@ This project is released under the MIT License. Feel free to use, modify, and di
 ## Support
 
 - **Documentation**: Check the `docs/` folder for detailed guides
-- **Examples**: Look at `main.lua` and `player.lua` for implementation examples
+- **Examples**: Check the `example/` folder for complete working demos:
+  - `example/scene/` - Scene management demo
+  - `example/class/` - Class system demo
 - **Love2D Wiki**: Official Love2D documentation for framework-specific questions
 
 ## Acknowledgments

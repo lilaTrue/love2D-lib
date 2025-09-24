@@ -1,80 +1,20 @@
 -- main.lua
--- Test implementation of SceneManager
+-- SceneManager Example
+-- Demonstrates comprehensive scene management with menu, game, pause, settings, and game over scenes
+--
+-- To run this example:
+-- 1. Copy lib/ folder to example/scene/lib/
+-- 2. Or run Love2D from the project root directory
 
 local SceneManager = require("lib.SceneManager")
 
--- Create menu scene
-local menuScene = SceneManager:createScene("menu")
-
-menuScene.load = function(self)
-    print("Menu scene loaded")
-end
-
-menuScene.unload = function(self)
-    print("Menu scene unloaded")
-end
-
-menuScene.update = function(self, dt)
-    -- Menu update logic here
-end
-
-menuScene.draw = function(self)
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Menu Scene", 10, 10)
-    love.graphics.print("Press SPACE to start game", 10, 30)
-    love.graphics.print("Press P to push game scene", 10, 50)
-    love.graphics.print("Press T to test transition", 10, 70)
-end
-
-menuScene.keypressed = function(self, key)
-    if key == "space" then
-        SceneManager:setScene("game")
-    elseif key == "p" then
-        SceneManager:pushScene("game")
-    elseif key == "t" then
-        SceneManager:startTransition("fade", 1.0)
-        SceneManager:setScene("game")
-    end
-end
-
--- Create game scene
-local gameScene = SceneManager:createScene("game")
-
-gameScene.load = function(self)
-    print("Game scene loaded")
-end
-
-gameScene.unload = function(self)
-    print("Game scene unloaded")
-end
-
-gameScene.update = function(self, dt)
-    -- Game update logic here
-end
-
-gameScene.draw = function(self)
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Game Scene", 10, 10)
-    love.graphics.print("Press ESC to go back to menu", 10, 30)
-    love.graphics.print("Press BACKSPACE to pop scene", 10, 50)
-end
-
-gameScene.keypressed = function(self, key)
-    if key == "escape" then
-        SceneManager:setScene("menu")
-    elseif key == "backspace" then
-        SceneManager:popScene()
-    end
-end
-
--- Add scenes to manager
-SceneManager:addScene("menu", menuScene)
-SceneManager:addScene("game", gameScene)
+-- Load scene definitions
+local scenes = require("scene")
 
 -- Set initial scene
 SceneManager:setScene("menu")
 
--- Love2D callbacks
+-- Love2D Callbacks
 function love.update(dt)
     SceneManager:update(dt)
 end
