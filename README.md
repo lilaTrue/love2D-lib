@@ -69,6 +69,23 @@ A comprehensive collision detection system with Unity-style collision state trac
 - Physics-based game mechanics
 - Real-time collision response
 
+### TimerManager (`lib/TimerManager.lua`)
+
+A FPS management system for controlling and monitoring frame rates in Love2D applications.
+
+**Features:**
+- Target FPS setting and enforcement
+- Real-time FPS monitoring
+- Frame time calculation
+- Automatic frame rate limiting
+- Integration with Love2D's update loop
+
+**Use Cases:**
+- Maintaining consistent game speed across different hardware
+- Power management and battery life optimization
+- Performance testing and benchmarking
+- Synchronizing animations and effects
+
 ## Documentation
 
 Comprehensive documentation is available in the `docs/` directory:
@@ -76,6 +93,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - [`docs/class.md`](docs/class.md) - Complete ClassManager documentation
 - [`docs/scene.md`](docs/scene.md) - Complete SceneManager documentation
 - [`docs/collision.md`](docs/collision.md) - Complete CollisionManager documentation
+- [`docs/timer.md`](docs/timer.md) - Complete TimerManager documentation
 
 Each documentation file includes:
 - Detailed API reference
@@ -105,14 +123,17 @@ Each documentation file includes:
 ```
 love lib/
 ├── README.md            # Project documentation
+├── main.lua             # TimerManager demonstration
 ├── lib/
 │   ├── SceneManager.lua     # Scene management system
 │   ├── classManager.lua     # OOP class system
-│   └── CollisionManager.lua # Collision detection system
+│   ├── CollisionManager.lua # Collision detection system
+│   └── TimerManager.lua     # FPS management system
 ├── docs/
 │   ├── class.md             # ClassManager documentation
 │   ├── scene.md             # SceneManager documentation
-│   └── collision.md         # CollisionManager documentation
+│   ├── collision.md         # CollisionManager documentation
+│   └── timer.md             # TimerManager documentation
 └── example/
     ├── scene/
     │   ├── lib/         # Copy of libraries for standalone execution

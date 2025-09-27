@@ -6,6 +6,7 @@
 - **SceneManager**: Full implementation with scene registration, switching, stacking, and event forwarding
 - **ClassManager**: Complete OOP system with inheritance, mixins, and Love2D integration
 - **CollisionManager**: Comprehensive collision detection with Unity-style state tracking
+- **TimerManager**: FPS management system with target FPS control and monitoring
 
 ### Documentation (Phase 1 - COMPLETED)
 - **README.md**: Comprehensive project overview with usage examples
