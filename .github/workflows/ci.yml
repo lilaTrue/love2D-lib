@@ -110,19 +110,33 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup Love2D environment
-      run: |
-        sudo add-apt-repository ppa:bartbes/love-stable -y
-        sudo apt-get update
-        sudo apt-get install -y love
-        
-    - name: Verify Love2D installation
-      run: love --version
+    - name: Install Lua
+      uses: leafo/gh-actions-lua@v10
+      with:
+        luaVersion: "5.1"
       
     - name: Check libraries can be loaded
       run: |
         cat > test_load.lua << 'EOF'
-        -- Test if libraries can be loaded
+        -- Test if libraries can be loaded (without love global)
+        -- Mock love global for testing
+        love = {
+            timer = {
+                getTime = function() return 0 end,
+                getDelta = function() return 0.016 end,
+                sleep = function() end
+            },
+            graphics = {
+                setColor = function() end,
+                rectangle = function() end,
+                circle = function() end,
+                print = function() end
+            },
+            window = {
+                setVSync = function() end
+            }
+        }
+        
         local success, result
         
         print("Testing library loading...")

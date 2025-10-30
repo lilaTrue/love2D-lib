@@ -113,6 +113,24 @@ jobs:
       run: |
         cat > perf_test.lua << 'EOF'
         -- Performance test for libraries
+        -- Mock love global
+        love = {
+            timer = {
+                getTime = function() return 0 end,
+                getDelta = function() return 0.016 end,
+                sleep = function() end
+            },
+            graphics = {
+                setColor = function() end,
+                rectangle = function() end,
+                circle = function() end,
+                print = function() end
+            },
+            window = {
+                setVSync = function() end
+            }
+        }
+        
         local startTime = os.clock()
         
         -- Test ClassManager
