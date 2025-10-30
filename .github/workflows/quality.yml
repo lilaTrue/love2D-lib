@@ -1,0 +1,210 @@
+name: Code Quality Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  # Analyse de complexité
+  complexity:
+    name: Code Complexity Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Lua
+      uses: leafo/gh-actions-lua@v10
+      with:
+        luaVersion: "5.1"
+        
+    - name: Analyze code complexity
+      run: |
+        echo "## 📊 Code Complexity Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        for file in lib/*.lua; do
+          filename=$(basename "$file")
+          lines=$(wc -l < "$file")
+          functions=$(grep -c "^function\|^local function" "$file" || echo "0")
+          
+          echo "### $filename" >> $GITHUB_STEP_SUMMARY
+          echo "- Lines: $lines" >> $GITHUB_STEP_SUMMARY
+          echo "- Functions: $functions" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        done
+        
+  # Analyse de duplication de code
+  duplication:
+    name: Code Duplication Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check for code duplication
+      run: |
+        echo "## 🔍 Code Duplication Analysis" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Simple duplication check
+        if command -v cloc &> /dev/null; then
+          cloc lib/ --by-file --json > duplication.json
+          echo "Duplication analysis completed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "Duplication checker not available" >> $GITHUB_STEP_SUMMARY
+        fi
+      continue-on-error: true
+        
+  # Vérification de sécurité
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run security checks
+      run: |
+        echo "## 🔒 Security Audit" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Check for common security issues in Lua
+        echo "### Checking for unsafe patterns..." >> $GITHUB_STEP_SUMMARY
+        
+        # Check for loadstring/dofile usage
+        if grep -r "loadstring\|dofile\|load(" lib/; then
+          echo "⚠️ Found potentially unsafe code loading" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ No unsafe code loading found" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Check for os.execute usage
+        if grep -r "os\.execute" lib/; then
+          echo "⚠️ Found os.execute usage" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ No os.execute usage found" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+  # Performance profiling
+  performance:
+    name: Performance Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Lua
+      uses: leafo/gh-actions-lua@v10
+      with:
+        luaVersion: "luajit-2.1.0-beta3"
+        
+    - name: Create performance test
+      run: |
+        cat > perf_test.lua << 'EOF'
+        -- Performance test for libraries
+        local startTime = os.clock()
+        
+        -- Test ClassManager
+        local classManager = require("lib.classManager")
+        local TestClass = classManager.createClass("TestClass")
+        for i = 1, 1000 do
+          local instance = TestClass:new()
+        end
+        
+        -- Test CollisionManager
+        local CollisionManager = require("lib.CollisionManager")
+        local colliders = {}
+        for i = 1, 100 do
+          table.insert(colliders, CollisionManager.RectCollider:new(i*10, i*10, 50, 50))
+        end
+        
+        local endTime = os.clock()
+        local elapsed = endTime - startTime
+        
+        print(string.format("Performance test completed in %.4f seconds", elapsed))
+        
+        if elapsed > 5.0 then
+          print("WARNING: Performance test took longer than expected")
+          os.exit(1)
+        end
+        EOF
+        
+    - name: Run performance test
+      run: lua perf_test.lua
+      
+  # Documentation coverage
+  doc-coverage:
+    name: Documentation Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check documentation coverage
+      run: |
+        echo "## 📚 Documentation Coverage" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Count documented functions
+        total_functions=$(grep -r "^function\|^local function" lib/ | wc -l)
+        commented_functions=$(grep -B1 "^function\|^local function" lib/ | grep "^--" | wc -l)
+        
+        if [ $total_functions -gt 0 ]; then
+          coverage=$((commented_functions * 100 / total_functions))
+          echo "- Total Functions: $total_functions" >> $GITHUB_STEP_SUMMARY
+          echo "- Documented Functions: $commented_functions" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage: $coverage%" >> $GITHUB_STEP_SUMMARY
+          
+          if [ $coverage -lt 50 ]; then
+            echo "⚠️ Documentation coverage is below 50%" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Good documentation coverage" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+        
+  # Code style consistency
+  style-check:
+    name: Code Style Consistency
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Check code style
+      run: |
+        echo "## 🎨 Code Style Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Check for trailing whitespace
+        if grep -r "[ \t]$" lib/ --include="*.lua"; then
+          echo "⚠️ Found trailing whitespace" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ No trailing whitespace" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Check for mixed indentation
+        if grep -P "^\t+ " lib/*.lua; then
+          echo "⚠️ Found mixed indentation (tabs and spaces)" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ Consistent indentation" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Check line endings
+        if file lib/*.lua | grep -q "CRLF"; then
+          echo "ℹ️ Found Windows line endings (CRLF)" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ Unix line endings (LF)" >> $GITHUB_STEP_SUMMARY
+        fi

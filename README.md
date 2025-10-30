@@ -1,5 +1,11 @@
 # Love2D Library Collection
 
+[![CI Status](https://github.com/lilaTrue/love2D-librairy/workflows/CI%20-%20Tests%20%26%20Linting/badge.svg)](https://github.com/lilaTrue/love2D-librairy/actions)
+[![Release](https://github.com/lilaTrue/love2D-librairy/workflows/CD%20-%20Release%20%26%20Publish/badge.svg)](https://github.com/lilaTrue/love2D-librairy/releases)
+[![Documentation](https://github.com/lilaTrue/love2D-librairy/workflows/Documentation%20Update/badge.svg)](https://lilaTrue.github.io/love2D-librairy/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Love2D](https://img.shields.io/badge/L%C3%96VE-11.0+-EA316E.svg)](https://love2d.org/)
+
 A comprehensive collection of Lua libraries designed to streamline and enhance Love2D game development. This project aims to provide high-quality, reusable components that address common game development challenges, making it easier to create complex and feature-rich games.
 
 ## Project Overview
@@ -22,16 +28,20 @@ A powerful scene management system that handles multiple game states, transition
 
 **Features:**
 - Scene registration and switching
+- **NEW: Parameter passing** between scenes
+- **NEW: Data communication** system (sendData/receiveData)
+- **NEW: Enhanced lifecycle** with pause/resume callbacks
 - Scene stacking (push/pop functionality)
 - Smooth transitions between scenes
 - Automatic Love2D event forwarding
 - Scene lifecycle management (load/unload)
 
 **Use Cases:**
-- Main menu ↔ Game level switching
-- Pause menu overlays
-- Level transitions
-- Dialog systems
+- Main menu ↔ Game level switching with data transfer
+- Pause menu overlays with state preservation
+- Level transitions with score/inventory passing
+- Dialog systems with return values
+- Multi-scene workflows (shops, inventory, quests)
 
 ### ClassManager (`lib/classManager.lua`)
 
@@ -41,6 +51,9 @@ An object-oriented programming system for Lua with Love2D integration.
 - Class creation with inheritance
 - Love2D-specific class templates
 - Mixin support for composition
+- **NEW: Property system** with getters/setters
+- **NEW: Serialization/Deserialization** for save systems
+- **NEW: Deep cloning** for instance duplication
 - Automatic constructor chaining
 - Class registration and management
 
@@ -49,14 +62,19 @@ An object-oriented programming system for Lua with Love2D integration.
 - UI components
 - Game systems (physics, AI, rendering)
 - Data structures with behavior
+- Save/load game state
+- Network serialization
 
 ### CollisionManager (`lib/CollisionManager.lua`)
 
-A comprehensive collision detection system with Unity-style collision state tracking.
+A comprehensive collision detection system with Unity-style collision state tracking and spatial optimization.
 
 **Features:**
 - Rectangle and circle collider types
-- Efficient collision detection algorithms
+- **NEW: Spatial grid partitioning** for O(n) performance
+- **NEW: Layer-based collision filtering** (Unity-style)
+- **NEW: Tag system** for collider categorization
+- **NEW: Active state management** for dynamic enable/disable
 - Unity-style collision states (enter, stay, exit)
 - Point containment checking
 - Debug visualization
@@ -68,6 +86,7 @@ A comprehensive collision detection system with Unity-style collision state trac
 - UI element interaction detection
 - Physics-based game mechanics
 - Real-time collision response
+- Large-scale collision optimization (100+ colliders)
 
 ### TimerManager (`lib/TimerManager.lua`)
 
@@ -75,9 +94,13 @@ A FPS management system for controlling and monitoring frame rates in Love2D app
 
 **Features:**
 - Target FPS setting and enforcement
-- Real-time FPS monitoring
+- **NEW: VSync support** for hardware synchronization
+- **NEW: Unlimited FPS mode** for benchmarking
+- **NEW: FPS history tracking** and average calculation
+- Real-time FPS monitoring with improved precision
 - Frame time calculation
 - Automatic frame rate limiting
+- **NEW: Target FPS validation** with tolerance checking
 - Integration with Love2D's update loop
 
 **Use Cases:**
@@ -85,6 +108,7 @@ A FPS management system for controlling and monitoring frame rates in Love2D app
 - Power management and battery life optimization
 - Performance testing and benchmarking
 - Synchronizing animations and effects
+- Professional FPS monitoring and debugging
 
 ## Documentation
 
@@ -104,14 +128,32 @@ Each documentation file includes:
 
 ## Getting Started
 
+### Installation
+
 1. **Clone or download** the library files to your Love2D project
 2. **Require the libraries** in your code:
    ```lua
    local SceneManager = require("lib.SceneManager")
    local classManager = require("lib.classManager")
+   local CollisionManager = require("lib.CollisionManager")
+   local TimerManager = require("lib.TimerManager")
    ```
 3. **Follow the documentation** for implementation details
-4. **Check the examples** in the `example/` folder:
+4. **Check the examples** in the `example/` folder
+
+### What's New (Latest Update)
+
+🚀 **Major Performance Improvements**
+- **CollisionManager**: Spatial grid optimization reduces collision checks from O(n²) to O(n)
+- **TimerManager**: Enhanced FPS algorithm with VSync support and better precision
+
+✨ **New Features**
+- **Scene Data Passing**: Transfer data between scenes seamlessly
+- **Collision Layers**: Unity-style layer masks for selective collision
+- **Serialization**: Save and load class instances easily
+- **Property System**: Define getters/setters for class properties
+
+📚 **See [CHANGELOG.md](CHANGELOG.md) for complete details and migration guide**
     - `example/scene/` - Complete scene management demo with multiple scenes
     - `example/class/` - Advanced class system demo with inheritance and game objects
     - `example/collider/` - Interactive collision detection demo with Unity-style states
@@ -238,7 +280,11 @@ This is a personal project, but suggestions and feedback are welcome. If you hav
 
 ## License
 
-This project is released under the MIT License. Feel free to use, modify, and distribute the code for both personal and commercial projects.
+This project is released under the [MIT License](LICENSE). Feel free to use, modify, and distribute the code for both personal and commercial projects.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes, new features, and migration guides.
 
 ## Support
 

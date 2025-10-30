@@ -166,4 +166,104 @@ function classManager.mixin(target, source)
     end
 end
 
+-- Property system (getters/setters)
+function classManager.defineProperty(class, propertyName, getter, setter)
+    local privateName = "_" .. propertyName
+    
+    if getter then
+        class["get" .. propertyName:sub(1,1):upper() .. propertyName:sub(2)] = function(self)
+            return getter(self, self[privateName])
+        end
+    end
+    
+    if setter then
+        class["set" .. propertyName:sub(1,1):upper() .. propertyName:sub(2)] = function(self, value)
+            self[privateName] = setter(self, value)
+        end
+    end
+end
+
+-- Simple serialization support
+function classManager.serialize(instance, excludeKeys)
+    excludeKeys = excludeKeys or {}
+    local data = {
+        __className = instance.__name
+    }
+    
+    for key, value in pairs(instance) do
+        local shouldExclude = false
+        for _, excludeKey in ipairs(excludeKeys) do
+            if key == excludeKey then
+                shouldExclude = true
+                break
+            end
+        end
+        
+        if not shouldExclude and type(value) ~= "function" and key ~= "__name" and key ~= "__base" then
+            if type(value) == "table" and value.__name then
+                -- Nested class instance
+                data[key] = classManager.serialize(value, excludeKeys)
+            else
+                data[key] = value
+            end
+        end
+    end
+    
+    return data
+end
+
+-- Deserialize data into a class instance
+function classManager.deserialize(data)
+    if not data.__className then
+        return data
+    end
+    
+    local class = classManager.getClass(data.__className)
+    if not class then
+        error("Cannot deserialize: class '" .. data.__className .. "' not found")
+    end
+    
+    local instance = setmetatable({}, {__index = class})
+    
+    for key, value in pairs(data) do
+        if key ~= "__className" then
+            if type(value) == "table" and value.__className then
+                -- Nested class instance
+                instance[key] = classManager.deserialize(value)
+            else
+                instance[key] = value
+            end
+        end
+    end
+    
+    return instance
+end
+
+-- Clone an instance
+function classManager.clone(instance, deep)
+    deep = deep == nil and true or deep
+    
+    local clone = setmetatable({}, getmetatable(instance))
+    
+    for key, value in pairs(instance) do
+        if type(value) == "table" and deep then
+            if value.__name then
+                -- It's a class instance
+                clone[key] = classManager.clone(value, deep)
+            else
+                -- Regular table
+                local t = {}
+                for k, v in pairs(value) do
+                    t[k] = v
+                end
+                clone[key] = t
+            end
+        else
+            clone[key] = value
+        end
+    end
+    
+    return clone
+end
+
 return classManager

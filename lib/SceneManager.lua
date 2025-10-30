@@ -17,6 +17,10 @@ SceneManager.Scene = {
     name = "",
     load = function(self) end,
     unload = function(self) end,
+    pause = function(self) end,
+    resume = function(self) end,
+    receiveData = function(self, data) end,
+    sendData = function(self) return nil end,
     update = function(self, dt) end,
     draw = function(self) end,
     keypressed = function(self, key, scancode, isrepeat) end,
@@ -73,7 +77,7 @@ function SceneManager:removeScene(name)
 end
 
 -- Set the current scene
-function SceneManager:setScene(name)
+function SceneManager:setScene(name, ...)
     if self.transition then return end  -- Don't switch during transition
 
     if self.currentScene and self.currentScene.unload then
@@ -83,29 +87,54 @@ function SceneManager:setScene(name)
     self.currentScene = name and self.scenes[name] or nil
 
     if self.currentScene and self.currentScene.load then
-        self.currentScene:load()
+        self.currentScene:load(...)
     end
 end
 
 -- Push a scene onto the stack (pause current, switch to new)
-function SceneManager:pushScene(name)
+function SceneManager:pushScene(name, ...)
     if self.transition then return end
 
     if self.currentScene then
         table.insert(self.sceneStack, self.currentScene)
+        if self.currentScene.pause then
+            self.currentScene:pause()
+        end
     end
-    self:setScene(name)
+    self:setScene(name, ...)
 end
 
 -- Pop the top scene from the stack (resume previous)
-function SceneManager:popScene()
+function SceneManager:popScene(...)
     if self.transition then return end
 
-    if #self.sceneStack > 0 then
-        self:setScene(table.remove(self.sceneStack).name)
-    else
-        self:setScene(nil)
+    if self.currentScene and self.currentScene.unload then
+        self.currentScene:unload()
     end
+
+    if #self.sceneStack > 0 then
+        self.currentScene = table.remove(self.sceneStack)
+        if self.currentScene.resume then
+            self.currentScene:resume(...)
+        end
+    else
+        self.currentScene = nil
+    end
+end
+
+-- Pass data to current scene
+function SceneManager:sendData(data)
+    if self.currentScene and self.currentScene.receiveData then
+        self.currentScene:receiveData(data)
+    end
+end
+
+-- Get data from current scene
+function SceneManager:getData()
+    if self.currentScene and self.currentScene.sendData then
+        return self.currentScene:sendData()
+    end
+    return nil
 end
 
 -- Get the current scene

@@ -1,0 +1,261 @@
+name: CD - Release & Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags like v1.0.0
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  # Build release archives
+  build:
+    name: Build Release Archives
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Get version from tag
+      id: version
+      run: |
+        if [ "${{ github.ref_type }}" == "tag" ]; then
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        else
+          echo "VERSION=dev-$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Create release directory structure
+      run: |
+        mkdir -p release/love2d-librairy-${{ steps.version.outputs.VERSION }}
+        cp -r lib release/love2d-librairy-${{ steps.version.outputs.VERSION }}/
+        cp -r docs release/love2d-librairy-${{ steps.version.outputs.VERSION }}/
+        cp -r example release/love2d-librairy-${{ steps.version.outputs.VERSION }}/
+        cp README.md LICENSE CHANGELOG.md QUICKSTART.md release/love2d-librairy-${{ steps.version.outputs.VERSION }}/
+        
+    - name: Create ZIP archive
+      run: |
+        cd release
+        zip -r love2d-librairy-${{ steps.version.outputs.VERSION }}.zip love2d-librairy-${{ steps.version.outputs.VERSION }}
+        
+    - name: Create TAR.GZ archive
+      run: |
+        cd release
+        tar -czf love2d-librairy-${{ steps.version.outputs.VERSION }}.tar.gz love2d-librairy-${{ steps.version.outputs.VERSION }}
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-archives
+        path: |
+          release/*.zip
+          release/*.tar.gz
+        retention-days: 30
+        
+    - name: Upload release archives
+      if: github.ref_type == 'tag'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          release/*.zip
+          release/*.tar.gz
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  # Generate documentation
+  documentation:
+    name: Generate & Deploy Documentation
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Lua
+      uses: leafo/gh-actions-lua@v10
+      with:
+        luaVersion: "5.1"
+        
+    - name: Install LuaRocks
+      uses: leafo/gh-actions-luarocks@v4
+      
+    - name: Install LDoc
+      run: luarocks install ldoc
+      
+    - name: Generate API documentation
+      run: |
+        mkdir -p generated-docs
+        # Create LDoc config
+        cat > config.ld << 'EOF'
+        project = 'Love2D Library Collection'
+        title = 'Love2D Library Collection API'
+        description = 'Comprehensive libraries for Love2D game development'
+        file = {'lib/'}
+        format = 'markdown'
+        output = 'generated-docs'
+        readme = 'README.md'
+        EOF
+        ldoc . || echo "LDoc generation skipped - will use existing docs"
+        
+    - name: Copy existing documentation
+      run: |
+        cp -r docs generated-docs/ || true
+        cp README.md CHANGELOG.md QUICKSTART.md generated-docs/ || true
+        
+    - name: Create documentation index
+      run: |
+        cat > generated-docs/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Love2D Library Collection - Documentation</title>
+            <style>
+                body { font-family: Arial, sans-serif; max-width: 1200px; margin: 50px auto; padding: 20px; }
+                h1 { color: #e74c3c; }
+                .lib-card { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 5px; }
+                .lib-card h2 { margin-top: 0; color: #3498db; }
+                a { color: #3498db; text-decoration: none; }
+                a:hover { text-decoration: underline; }
+            </style>
+        </head>
+        <body>
+            <h1>📚 Love2D Library Collection - Documentation</h1>
+            <p>Comprehensive libraries for Love2D game development</p>
+            
+            <div class="lib-card">
+                <h2>🎬 SceneManager</h2>
+                <p>Powerful scene management system with transitions and state handling</p>
+                <a href="docs/scene.md">View Documentation →</a>
+            </div>
+            
+            <div class="lib-card">
+                <h2>📦 ClassManager</h2>
+                <p>Object-oriented programming system with inheritance and serialization</p>
+                <a href="docs/class.md">View Documentation →</a>
+            </div>
+            
+            <div class="lib-card">
+                <h2>🎯 CollisionManager</h2>
+                <p>Optimized collision detection with spatial partitioning and layers</p>
+                <a href="docs/collision.md">View Documentation →</a>
+            </div>
+            
+            <div class="lib-card">
+                <h2>⏱️ TimerManager</h2>
+                <p>FPS management and monitoring system</p>
+                <a href="docs/timer.md">View Documentation →</a>
+            </div>
+            
+            <hr>
+            
+            <h2>Quick Links</h2>
+            <ul>
+                <li><a href="README.md">README</a></li>
+                <li><a href="CHANGELOG.md">CHANGELOG</a></li>
+                <li><a href="QUICKSTART.md">Quick Start Guide</a></li>
+            </ul>
+        </body>
+        </html>
+        EOF
+        
+    - name: Deploy to GitHub Pages
+      if: github.ref_type == 'tag'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./generated-docs
+        publish_branch: gh-pages
+  
+  # Create release notes
+  release-notes:
+    name: Create Release Notes
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref_type == 'tag'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Generate changelog
+      id: changelog
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        
+        # Extract changelog for this version
+        if [ -f CHANGELOG.md ]; then
+          # Get content between version headers
+          sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$d' > release_notes.md
+          
+          if [ ! -s release_notes.md ]; then
+            echo "## Release $VERSION" > release_notes.md
+            echo "" >> release_notes.md
+            echo "See [CHANGELOG.md](CHANGELOG.md) for details." >> release_notes.md
+          fi
+        else
+          echo "## Release $VERSION" > release_notes.md
+          echo "" >> release_notes.md
+          echo "Release notes not available." >> release_notes.md
+        fi
+        
+    - name: Update release with notes
+      uses: softprops/action-gh-release@v1
+      with:
+        body_path: release_notes.md
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  # Notify on Discord/Slack (optional)
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [build, documentation, release-notes]
+    if: always() && github.ref_type == 'tag'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Get version
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      
+    - name: Discord notification
+      if: secrets.DISCORD_WEBHOOK
+      run: |
+        curl -H "Content-Type: application/json" \
+             -d "{\"content\": \"🚀 **Love2D Library Collection ${{ steps.version.outputs.VERSION }}** released!\\n\\nDownload: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.version.outputs.VERSION }}\"}" \
+             ${{ secrets.DISCORD_WEBHOOK }}
+      continue-on-error: true
+  
+  # Quality metrics
+  metrics:
+    name: Calculate Metrics
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Calculate code metrics
+      run: |
+        echo "## 📊 Release Metrics" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Count lines of code
+        LIB_LINES=$(find lib -name "*.lua" -exec wc -l {} + | tail -1 | awk '{print $1}')
+        DOC_FILES=$(find docs -name "*.md" | wc -l)
+        EXAMPLE_DIRS=$(find example -mindepth 1 -maxdepth 1 -type d | wc -l)
+        
+        echo "- **Library Code:** $LIB_LINES lines" >> $GITHUB_STEP_SUMMARY
+        echo "- **Documentation Files:** $DOC_FILES" >> $GITHUB_STEP_SUMMARY
+        echo "- **Example Projects:** $EXAMPLE_DIRS" >> $GITHUB_STEP_SUMMARY
+        echo "- **Libraries:** 4 (ClassManager, SceneManager, CollisionManager, TimerManager)" >> $GITHUB_STEP_SUMMARY
