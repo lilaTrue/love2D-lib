@@ -72,3 +72,17 @@ files["demo_*.lua"] = {
         "311", -- Value assigned to variable is unused
     },
 }
+
+-- Test files
+files["tests/**/*.lua"] = {
+    globals = {
+        "describe",
+        "it",
+        "before_each",
+        "after_each",
+        "setup",
+        "teardown",
+        "pending",
+        "assert"
+    },
+}

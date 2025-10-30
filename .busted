@@ -1,0 +1,11 @@
+return {
+  _all = {
+    coverage = false,
+    verbose = true
+  },
+  default = {
+    ROOT = {"tests/"},
+    pattern = "test_.+%.lua$",
+    lpath = "lib/?.lua;lib/?/init.lua",
+  }
+}
